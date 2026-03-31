@@ -7,13 +7,15 @@ use std::{process::exit, time::Duration};
 
 use tokio::fs;
 
-use crate::response::Notification;
+use crate::display::log_notification;
 
+mod display;
 mod github;
 pub mod response;
 
 const CONTACT: &str = "If the problem persists, please contact me: https://kybe.xyz/ident.txt";
 const NO_TOKEN_MSG: &str = "Please set the \"GH_NOTIFY_DAEMON_TOKEN\" or \"GH_NOTIFY_DAEMON_TOKEN_FILE\" env variable\nTo obtain the TOKEN go to https://github.com/settings/tokens and create a classic token with notifications perms";
+const USER_AGENT: &str = "gh-notify-daemon / https://git.kybe.xyz/2kybe3/gh-notify-daemon";
 
 #[tokio::main]
 async fn main() {
@@ -60,23 +62,11 @@ async fn run_loop(github_token: &str) {
 
         if let Some(notifications) = res.notifications() {
             for notification in notifications.notifications() {
-                log_notification(notification).await;
+                log_notification(notification, github_token).await;
             }
         }
 
         tokio::time::sleep(Duration::from_secs(res.pool_interval())).await;
-    }
-}
-
-async fn log_notification(notification: &Notification) {
-    if let Err(e) = notify_rust::Notification::new()
-        .summary(notification.title())
-        .body(&notification.body())
-        .finalize()
-        .show_async()
-        .await
-    {
-        eprintln!("failed to send notification: {e}\n{CONTACT}");
     }
 }
 

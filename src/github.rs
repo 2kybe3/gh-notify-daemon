@@ -6,7 +6,7 @@
 use chrono::{DateTime, Utc};
 use reqwest::{StatusCode, header};
 
-use crate::{error_notification, response::Notifications};
+use crate::{USER_AGENT, error_notification, response::Notifications};
 
 const NOTIFICATION_ENDPOINT: &str = "https://api.github.com/notifications";
 const ACCEPT: &str = "application/vnd.github+json";
@@ -17,8 +17,6 @@ const API_VERSION: &str = "2026-03-10";
 
 const LAST_MODIFIED_HEADER: &str = "Last-Modified";
 const POOL_INTERVAL_HEADER: &str = "X-Poll-Interval";
-
-const USER_AGENT: &str = "gh-notify-daemon / https://git.kybe.xyz/2kybe3/gh-notify-daemon";
 
 const DEFAULT_POOL_INTERVAL: u64 = 60;
 
