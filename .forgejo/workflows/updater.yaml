@@ -66,8 +66,8 @@ jobs:
         continue-on-error: true
         if: ${{ steps.update.outputs.branch != 'none' }}
         run: |
-          nix build git+https://git.kybe.xyz/2kybe3/gh-notify-daemon?rev=${FORGEJO_SHA} --max-jobs 32 -L --no-write-lock-file
-          nix flake check git+https://git.kybe.xyz/2kybe3/gh-notify-daemon?rev=${FORGEJO_SHA} --max-jobs 32 -L --no-write-lock-file
+          nix build git+https://git.kybe.xyz/2kybe3/gh-notify-daemon?rev=${FORGEJO_SHA} --max-jobs 32 -L --no-write-lock-file --accept-flake-config
+          nix flake check git+https://git.kybe.xyz/2kybe3/gh-notify-daemon?rev=${FORGEJO_SHA} --max-jobs 32 -L --no-write-lock-file --accept-flake-config
       - name: Make PR
         if: ${{ steps.update.outputs.branch != 'none' }}
         run: |
