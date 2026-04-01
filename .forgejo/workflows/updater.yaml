@@ -86,16 +86,20 @@ jobs:
             LABEL="$FAILED"
           fi
 
+          BODY="$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY/actions/runs/$FORGEJO_JOB";
+
           JSON=$(jq -n \
             --arg head "$HEAD" \
             --arg base "$BASE" \
             --arg title "$TITLE" \
+            --arg body "$BODY" \
             --arg assignee "$ASSIGNEE" \
             --argjson labels "[$LABEL]" \
             '{
                 "head": $head,
                 "base": $base,
                 "title": $title,
+                "body": $body,
                 "assignee": $assignee,
                 "labels": $labels
             }')
