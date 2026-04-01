@@ -10,7 +10,7 @@ A simple github notification daemon
 
 ### 1. Add the flake
 
-```
+```nix
 gh-notify-daemon = {
   url = "git+https://git.kybe.xyz/2kybe3/gh-notify-daemon";
   inputs.nixpkgs.follows = "nixpkgs";
@@ -19,7 +19,7 @@ gh-notify-daemon = {
 
 ### 2. Enable the module
 
-```
+```nix
 modules = [
     inputs.gh-notify-daemon.homeManagerModules.gh-notify-daemon
     ./home
@@ -28,7 +28,7 @@ modules = [
 
 ### 3. Configure secrets (sops-nix example)
 
-```
+```nix
 {self,config,...}:{
   sops.secrets.gh-notify-daemon = {
     sopsFile = "${self}/secrets/gh-notify-daemon.yaml";
