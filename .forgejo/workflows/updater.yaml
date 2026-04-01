@@ -51,14 +51,14 @@ jobs:
           fi
 
           if [ "$HEAD" != "$(git rev-parse HEAD)" ]; then
-            BRANCH="update/$(date +'%Y-%m-%d-%H-%M')"
+            BRANCH="update"
 
             git checkout -B "$BRANCH"
-            git push -u origin "$BRANCH"
+            git push -f -u origin "$BRANCH"
 
             echo "branch=$BRANCH" >> $FORGEJO_OUTPUT
           else
-            echo "branch=none" >> $GITHUB_OUTPUT
+            echo "branch=none" >> $FORGEJO_OUTPUT
             echo ">> HEAD unchanged, skipping branch creation/push"
           fi
       - name: Checks
@@ -67,6 +67,7 @@ jobs:
         if: ${{ steps.update.outputs.branch != 'none' }}
         run: |
           nix build git+https://git.kybe.xyz/2kybe3/gh-notify-daemon?rev=${FORGEJO_SHA} --max-jobs 32 -L --no-write-lock-file --accept-flake-config
+
           nix flake check git+https://git.kybe.xyz/2kybe3/gh-notify-daemon?rev=${FORGEJO_SHA} --max-jobs 32 -L --no-write-lock-file --accept-flake-config
       - name: Make PR
         if: ${{ steps.update.outputs.branch != 'none' }}
@@ -81,8 +82,10 @@ jobs:
           SUCCESS="${{ env.CHECKS_SUCCEEDED_LABEL_ID }}"
 
           if [[ "${{ steps.checks.conclusion }}" == "success" ]]; then
+            echo ">> Checks Succeeded"
             LABEL="$SUCCESS"
           else
+            echo ">> Checks Failed"
             LABEL="$FAILED"
           fi
 
@@ -103,11 +106,22 @@ jobs:
                 "assignee": $assignee,
                 "labels": $labels
             }')
+          echo $JSON
+
+          URL="$FORGEJO_API_URL/repos/$FORGEJO_REPOSITORY/pulls?state=open&sort=recentupdate&labels=$SUCCESS&labels=$FAILED"
+          RESP=$(curl -X GET -H "Content-Type: application/json" -H "Authorization: token $TOKEN" $URL)
+          EXISTING=$(echo "$RESP" | jq -r '.[0].id // empty')
+
+          echo "existing >> ${EXISTING:+true $EXISTING}${EXISTING:+"false"}"
 
           URL="$FORGEJO_API_URL/repos/$FORGEJO_REPOSITORY/pulls"
-
-          echo $JSON
-          curl -X POST -H "Content-Type: application/json" -H "Authorization: token $TOKEN" -d "$JSON" $URL
+          if [ -n "$EXISTING" ]; then
+            echo ">> PATCHING"
+            curl -X PATCH -H "Content-Type: application/json" -H "Authorization: token $TOKEN" -d "$JSON" "$URL/$EXISTING"
+          else
+            echo ">> POSTING"
+            curl -X POST -H "Content-Type: application/json" -H "Authorization: token $TOKEN" -d "$JSON" $URL
+          fi
       - name: Push to Attic
         if: ${{ steps.attic.conclusion == 'success' }}
         run: attic push main --ignore-upstream-cache-filter -j 64 $(ls -d /nix/store/*/)
