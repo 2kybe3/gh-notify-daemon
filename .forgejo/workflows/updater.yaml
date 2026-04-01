@@ -3,7 +3,7 @@ on:
     - cron: '0 0 * * *'
   workflow_dispatch:
 env:
-  REPO_BRANCH: main
+  REPO_BRANCH: staging
   PR_ASSIGNEE: kybe
   PR_TITLE: Automatic Update
   # gotten with the /repos/{owner}/{repo}/labels endpoint
@@ -13,7 +13,7 @@ jobs:
   updater:
     runs-on: rust
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: https://github.com/cachix/install-nix-action@v31
       - name: Setup Attic
         run: |
@@ -109,5 +109,5 @@ jobs:
           echo $JSON
           curl -X POST -H "Content-Type: application/json" -H "Authorization: token $TOKEN" -d "$JSON" $URL
       - name: Push to Attic
-        if: always()
+        if: ${{ steps.attic.conclusion == 'success' }}
         run: attic push main --ignore-upstream-cache-filter -j 64 $(ls -d /nix/store/*/)
