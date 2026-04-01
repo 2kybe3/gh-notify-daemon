@@ -3,9 +3,9 @@
  * Copyright (C) 2026 2kybe3 <kybe@kybe.xyz>
  */
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Notifications(Vec<Notification>);
 impl Notifications {
     pub fn notifications(&self) -> &Vec<Notification> {
@@ -13,19 +13,19 @@ impl Notifications {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Notification {
     subject: Subject,
     repository: Repository,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Repository {
     full_name: String,
     description: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Subject {
     title: String,
     url: String,

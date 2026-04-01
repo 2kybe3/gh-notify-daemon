@@ -54,7 +54,6 @@ async fn run_loop(github_token: &str) {
     loop {
         let res =
             github::get_notification(&mut client, github_token, newest_notification.as_ref()).await;
-        println!("{res:?}");
 
         if let Some(last_modified) = res.last_modified() {
             newest_notification = Some(*last_modified);

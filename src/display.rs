@@ -7,7 +7,7 @@ use reqwest::header;
 use serde::Deserialize;
 use tokio::task;
 
-use crate::{CONTACT, USER_AGENT, response::Notification};
+use crate::{CONTACT, USER_AGENT, error_notification, response::Notification};
 
 #[derive(Deserialize)]
 struct Response {
@@ -15,6 +15,11 @@ struct Response {
 }
 
 pub async fn log_notification(notification: &Notification, github_token: &str) {
+    match serde_json::to_string(notification) {
+        Ok(v) => println!("{v}"),
+        Err(e) => error_notification(format!("{e}")).await,
+    };
+
     let handle = match notify_rust::Notification::new()
         .summary(notification.title())
         .body(&notification.body())
