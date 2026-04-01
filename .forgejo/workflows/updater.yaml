@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 env:
   REPO_BRANCH: main
-  PR_ASSIGNEE: kybe236
+  PR_ASSIGNEE: kybe
   PR_TITLE: Automatic Update
   # gotten with the /repos/{owner}/{repo}/labels endpoint
   CHECKS_FAILED_LABEL_ID: 2
