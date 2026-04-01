@@ -70,7 +70,7 @@ async fn run_loop(github_token: &str) {
 
         if let Some(notifications) = res.notifications() {
             for notification in notifications.notifications() {
-                log_notification(notification, github_token, newest_notification).await;
+                log_notification(notification, newest_notification).await;
             }
         }
 

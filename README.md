@@ -35,9 +35,6 @@ modules = [
     key = "token";
   };
 
-  # Ensures that xdg-open can open the notification in your browser
-  xdg.portal.xdgOpenUsePortal = true;
-
   gh-notify-daemon = {
     enable = true;
     secretFile = config.sops.secrets.gh-notify-daemon.path;
