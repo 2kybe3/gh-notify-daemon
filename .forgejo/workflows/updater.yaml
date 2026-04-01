@@ -1,0 +1,101 @@
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+env:
+  REPO_BRANCH: main
+  PR_ASSIGNEE: kybe236
+  PR_TITLE: Automatic Update
+  # gotten with the /repos/{owner}/{repo}/labels endpoint
+  CHECKS_FAILED_LABEL_ID: 2
+  CHECKS_SUCCEEDED_LABEL_ID: 1
+jobs:
+  updater:
+    runs-on: rust
+    steps:
+      - uses: actions/checkout@v4
+      - uses: https://github.com/cachix/install-nix-action@v31
+      - name: Setup Attic
+        run: |
+          nix profile add "nixpkgs#attic-client"
+          attic login main https://attic.kybe.xyz/main ${{ secrets.ATTIC_KEY }}
+          attic use main
+      - name: Setup SSH & GPG
+        run: |
+          # SSH
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ACTIONS_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H gitc.kybe.xyz >> ~/.ssh/known_hosts
+
+          # GPG
+          gpg --batch --import <<< "${{ secrets.ACTIONS_GPG_KEY }}"
+          KEY_ID=$(gpg --list-keys --with-colons | awk -F: '/^pub/ {print $5; exit}')
+          echo "KEY_ID=$KEY_ID"
+          git config --global user.signingkey $KEY_ID
+          git config --global commit.gpgsign true
+          git config --global user.name "actions"
+          git config --global user.email "actions@kybe.xyz"
+      - name: Update
+        id: update
+        run: |
+          HEAD=$(git rev-parse HEAD)
+          nix flake update --commit-lock-file
+          cargo update
+          git add .
+
+          if ! git diff --cached --quiet; then
+            git commit -m "Cargo.toml: update"
+          else
+            echo ">> No cargo changes"
+          fi
+
+          if [ "$HEAD" != "$(git rev-parse HEAD)" ]; then
+            BRANCH="update/$(date +'%Y-%m-%d')"
+
+            git checkout -B "$BRANCH"
+            git push -u origin "$BRANCH"
+
+            echo "branch=$BRANCH" >> $FORGEJO_OUTPUT
+          else
+            echo "branch=none" >> $GITHUB_OUTPUT
+            echo ">> HEAD unchanged, skipping branch creation/push"
+          fi
+      - name: Checks
+        id: checks
+        continue-on-error: true
+        if: ${{ steps.update.outputs.branch != 'none' }}
+        run: |
+          nix build git+https://git.kybe.xyz/2kybe3/gh-notify-daemon?rev=${FORGEJO_SHA} --max-jobs 32 -L --no-write-lock-file
+          nix flake check git+https://git.kybe.xyz/2kybe3/gh-notify-daemon?rev=${FORGEJO_SHA} --max-jobs 32 -L --no-write-lock-file
+      - name: Make PR
+        if: ${{ steps.update.outputs.branch != 'none' }}
+        run: |
+          HEAD="${{ steps.update.outputs.branch }}"
+          BASE="${{ env.REPO_BRANCH }}"
+          TITLE="${{ env.PR_TITLE }}"
+          ASSIGNEE="${{ env.PR_ASSIGNEE }}"
+          FAILED="${{ env.CHECKS_FAILED_LABEL_ID }}"
+          SUCCESS="${{ env.CHECKS_SUCCEEDED_LABEL_ID }}"
+
+          if [[ "${{ steps.checks.conclusion }}" == "success" ]]; then
+            LABEL="$SUCCESS"
+          else
+            LABEL="$FAILED"
+          fi
+
+          JSON=$(jq -n \
+            --arg head "$HEAD" \
+            --arg base "$BASE" \
+            --arg title "$TITLE" \
+            --arg assignee "$ASSIGNEE" \
+            --arg label "$LABEL" \
+            '{head: $head, base: $base, title: $title, assignee: $assignee, labels: [$label]}')
+
+          URL="$FORGEJO_API_URL/repos/$FORGEJO_REPOSITORY/pulls"
+
+          echo $JSON
+          curl -X POST -H "Content-Type: application/json" -H "Authorization: token $FORGEJO_TOKEN" -d "$JSON" $URL
+      - name: Push to Attic
+        if: always()
+        run: attic push main --ignore-upstream-cache-filter -j 64 $(ls -d /nix/store/*/)
