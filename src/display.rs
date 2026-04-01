@@ -3,6 +3,7 @@
  * Copyright (C) 2026 2kybe3 <kybe@kybe.xyz>
  */
 
+use chrono::{DateTime, Utc};
 use reqwest::header;
 use serde::Deserialize;
 use tokio::task;
@@ -14,7 +15,16 @@ struct Response {
     html_url: String,
 }
 
-pub async fn log_notification(notification: &Notification, github_token: &str) {
+pub async fn log_notification(
+    notification: &Notification,
+    github_token: &str,
+    newest_notification: Option<DateTime<Utc>>,
+) {
+    if let Some(newest_notification) = newest_notification
+        && newest_notification <= notification.updated_at()
+    {
+        return;
+    }
     match serde_json::to_string(notification) {
         Ok(v) => println!("{v}"),
         Err(e) => error_notification(format!("{e}")).await,

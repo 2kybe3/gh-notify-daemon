@@ -3,8 +3,10 @@
  * Copyright (C) 2026 2kybe3 <kybe@kybe.xyz>
  */
 
+use std::str::FromStr;
+
 use chrono::{DateTime, Utc};
-use reqwest::{StatusCode, header};
+use reqwest::{StatusCode, Url, header};
 
 use crate::{USER_AGENT, error_notification, response::Notifications};
 
@@ -81,8 +83,16 @@ pub async fn get_notification(
     token: &str,
     newest_notification: Option<&DateTime<Utc>>,
 ) -> GetNotificationResponse {
+    let mut url = Url::from_str(NOTIFICATION_ENDPOINT).unwrap();
+    if let Some(v) = newest_notification {
+        url.set_query(Some(&format!(
+            "since={}",
+            &v.to_rfc3339_opts(chrono::SecondsFormat::Secs, true)
+        )))
+    };
+
     let mut request = client
-        .get(NOTIFICATION_ENDPOINT)
+        .get(url)
         .header(API_VERSION_HEADER, API_VERSION)
         .header(header::USER_AGENT, USER_AGENT)
         .header(header::ACCEPT, ACCEPT)

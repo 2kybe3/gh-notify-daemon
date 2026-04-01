@@ -68,14 +68,14 @@ async fn run_loop(github_token: &str) {
         let res =
             github::get_notification(&mut client, github_token, newest_notification.as_ref()).await;
 
-        if let Some(last_modified) = res.last_modified() {
-            newest_notification = Some(*last_modified);
-        }
-
         if let Some(notifications) = res.notifications() {
             for notification in notifications.notifications() {
-                log_notification(notification, github_token).await;
+                log_notification(notification, github_token, newest_notification).await;
             }
+        }
+
+        if let Some(last_modified) = res.last_modified() {
+            newest_notification = Some(*last_modified);
         }
 
         tokio::time::sleep(Duration::from_secs(res.pool_interval())).await;

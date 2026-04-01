@@ -3,6 +3,7 @@
  * Copyright (C) 2026 2kybe3 <kybe@kybe.xyz>
  */
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -17,6 +18,7 @@ impl Notifications {
 pub struct Notification {
     subject: Subject,
     repository: Repository,
+    updated_at: DateTime<Utc>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -47,5 +49,9 @@ impl Notification {
             "Repo: {}\nDescription: {}\nType: {}",
             self.repository.full_name, self.repository.description, self.subject.type_
         )
+    }
+
+    pub fn updated_at(&self) -> DateTime<Utc> {
+        self.updated_at
     }
 }
