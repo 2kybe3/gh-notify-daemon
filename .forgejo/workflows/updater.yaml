@@ -40,7 +40,7 @@ jobs:
         id: update
         run: |
           HEAD=$(git rev-parse HEAD)
-          nix flake update --commit-lock-file
+          nix flake update --commit-lock-file --no-write-lock-file --accept-flake-config
           cargo update
           git add .
 
