@@ -71,6 +71,8 @@ jobs:
       - name: Make PR
         if: ${{ steps.update.outputs.branch != 'none' }}
         run: |
+          TOKEN="${{ secrets.UPDATER_GH_NOTIFY_DAEMON }}"
+
           HEAD="${{ steps.update.outputs.branch }}"
           BASE="${{ env.REPO_BRANCH }}"
           TITLE="${{ env.PR_TITLE }}"
@@ -90,12 +92,18 @@ jobs:
             --arg title "$TITLE" \
             --arg assignee "$ASSIGNEE" \
             --arg label "$LABEL" \
-            '{head: $head, base: $base, title: $title, assignee: $assignee, labels: [$label]}')
+            '{
+                "head": $head,
+                "base": $base,
+                "title": $title,
+                "assignee": $assignee,
+                "labels": [$label]}
+            ')
 
           URL="$FORGEJO_API_URL/repos/$FORGEJO_REPOSITORY/pulls"
 
           echo $JSON
-          curl -X POST -H "Content-Type: application/json" -H "Authorization: token $FORGEJO_TOKEN" -d "$JSON" $URL
+          curl -X POST -H "Content-Type: application/json" -H "Authorization: token $TOKEN" -d "$JSON" $URL
       - name: Push to Attic
         if: always()
         run: attic push main --ignore-upstream-cache-filter -j 64 $(ls -d /nix/store/*/)
