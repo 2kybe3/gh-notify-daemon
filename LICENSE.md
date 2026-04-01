@@ -1,6 +1,7 @@
 # LICENSE
 
 gh-notify-daemon - A simple github notification daemon
+
 Copyright (C) 2026 2kybe3 <kybe@kybe.xyz>
 
 # GNU GENERAL PUBLIC LICENSE
