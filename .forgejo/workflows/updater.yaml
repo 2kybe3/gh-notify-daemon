@@ -51,7 +51,7 @@ jobs:
           fi
 
           if [ "$HEAD" != "$(git rev-parse HEAD)" ]; then
-            BRANCH="update/$(date +'%Y-%m-%d')"
+            BRANCH="update/$(date +'%Y-%m-%d-%H-%M')"
 
             git checkout -B "$BRANCH"
             git push -u origin "$BRANCH"
