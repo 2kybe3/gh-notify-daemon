@@ -91,13 +91,13 @@ jobs:
             --arg base "$BASE" \
             --arg title "$TITLE" \
             --arg assignee "$ASSIGNEE" \
-            --arg label "$LABEL" \
+            --argjson labels "[$LABEL]" \
             '{
                 "head": $head,
                 "base": $base,
                 "title": $title,
                 "assignee": $assignee,
-                "labels": [$label]}
+                "labels": $labels
             ')
 
           URL="$FORGEJO_API_URL/repos/$FORGEJO_REPOSITORY/pulls"
