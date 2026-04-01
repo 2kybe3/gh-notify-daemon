@@ -42,6 +42,14 @@
           commonArgs
           // {
             inherit cargoArtifacts;
+
+            nativeBuildInputs = pkgs.lib.optionals pkgs.stdenv.isLinux [
+              pkgs.makeWrapper
+            ];
+
+            postInstall = pkgs.lib.optionalString pkgs.stdenv.isLinux ''
+              wrapProgram $out/bin/gh-notify-daemon --set PATH ${pkgs.xdg-utils}/bin:$PATH
+            '';
           }
         );
       in
