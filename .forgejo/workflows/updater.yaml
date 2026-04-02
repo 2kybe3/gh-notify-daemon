@@ -21,7 +21,7 @@ jobs:
           nix profile add "nixpkgs#attic-client"
           attic login main https://attic.kybe.xyz/main ${{ secrets.ATTIC_KEY }}
           attic use main
-      - name: Setup SSH & GPG
+      - name: Setup GPG
         run: |
           # GPG
           gpg --batch --import <<< "${{ secrets.ACTIONS_GPG_KEY }}"
@@ -106,7 +106,7 @@ jobs:
 
           URL="$FORGEJO_API_URL/repos/$FORGEJO_REPOSITORY/pulls?state=open&sort=recentupdate&labels=$SUCCESS&labels=$FAILED"
           RESP=$(curl -X GET -H "Content-Type: application/json" -H "Authorization: token $TOKEN" $URL)
-          EXISTING=$(echo "$RESP" | jq -r --arg head $HEAD --arg $BASE staging '.[] | select(.head.label == $head and .base.label == $base) | .id // empty' | head -n1)
+          EXISTING=$(echo "$RESP" | jq -r --arg head $HEAD --arg base $BASE '.[] | select(.head.label == $head and .base.label == $base) | .id // empty' | head -n1)
 
           echo "existing >> ${EXISTING:+true $EXISTING}${EXISTING:+"false"}"
 
