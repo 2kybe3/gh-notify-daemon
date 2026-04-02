@@ -14,18 +14,14 @@ jobs:
     runs-on: rust
     steps:
       - uses: actions/checkout@v6
-        with:
-          ref: staging
-          ssh-key: ${{ secrets.ACTIONS_SSH_KEY }}
-          ssh-known-hosts: 'gitc.kybe.xyz ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMo041C1x0fZwmSwcS0N/fR98x2a5ICq+pxXpy4fTbX4'
-          github-server-url: 'https://gitc.kybe.xyz'
       - uses: https://github.com/cachix/install-nix-action@v31
       - name: Setup Attic
+        id: attic
         run: |
           nix profile add "nixpkgs#attic-client"
           attic login main https://attic.kybe.xyz/main ${{ secrets.ATTIC_KEY }}
           attic use main
-      - name: Setup GPG
+      - name: Setup SSH & GPG
         run: |
           # GPG
           gpg --batch --import <<< "${{ secrets.ACTIONS_GPG_KEY }}"
