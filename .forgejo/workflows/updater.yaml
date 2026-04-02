@@ -106,7 +106,7 @@ jobs:
 
           URL="$FORGEJO_API_URL/repos/$FORGEJO_REPOSITORY/pulls?state=open&sort=recentupdate&labels=$SUCCESS&labels=$FAILED"
           RESP=$(curl -X GET -H "Content-Type: application/json" -H "Authorization: token $TOKEN" $URL)
-          EXISTING=$(echo "$RESP" | jq -r '.[0].id // empty')
+          EXISTING=$(echo "$RESP" | jq -r --arg head $HEAD --arg $BASE staging '.[] | select(.head.label == $head and .base.label == $base) | .id // empty' | head -n1)
 
           echo "existing >> ${EXISTING:+true $EXISTING}${EXISTING:+"false"}"
 
