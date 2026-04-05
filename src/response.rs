@@ -30,7 +30,6 @@ pub struct Repository {
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Subject {
     title: String,
-    url: String,
     #[serde(rename = "type")]
     type_: String,
 }
@@ -38,10 +37,6 @@ pub struct Subject {
 impl Notification {
     pub fn title(&self) -> &str {
         &self.subject.title
-    }
-
-    pub fn url(&self) -> &str {
-        &self.subject.url
     }
 
     pub fn body(&self) -> String {
