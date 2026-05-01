@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - staging
+      - main
 jobs:
   lint-and-build:
     runs-on: docker
@@ -21,19 +21,3 @@ jobs:
       - name: Push to Attic
         if: ${{ steps.attic.conclusion == 'success' }}
         run: attic push main --ignore-upstream-cache-filter -j 64 $(ls -d /nix/store/*/)
-  merge-to-main:
-    needs: lint-and-build
-    runs-on: docker
-    if: ${{ success() }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: main
-          ssh-key: ${{ secrets.ACTIONS_SSH_KEY }}
-          ssh-known-hosts: 'gitc.kybe.xyz ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMo041C1x0fZwmSwcS0N/fR98x2a5ICq+pxXpy4fTbX4'
-          github-server-url: 'https://gitc.kybe.xyz'
-      - name: Rebase staging onto main
-        run: |
-          git fetch origin staging
-          git rebase origin/staging
-          git push origin HEAD:main

@@ -3,7 +3,7 @@ on:
   schedule:
     - cron: '0 0 * * *'
 env:
-  REPO_BRANCH: staging
+  REPO_BRANCH: main
   PR_ASSIGNEE: kybe
   PR_TITLE: Automatic Update
   # gotten with the /repos/{owner}/{repo}/labels endpoint
